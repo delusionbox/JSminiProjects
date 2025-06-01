@@ -11,12 +11,13 @@ const createWindow = () => {
         height: 600,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
-            contextIsolation: true, 
+            contextIsolation: true,
             nodeIntegration: false,
         }
     });
 
     win.loadFile('index.html');
+    win.webContents.openDevTools();
 };
 
 app.whenReady().then(() => {
@@ -34,4 +35,13 @@ ipcMain.on('submitContents', (event, contents) => { //Content write in JSON file
         date: contents.date,
     }); //else content push in empty array
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2)); //and write json (value, replacer, space)
+});
+
+ipcMain.handle('show-contents', async () => {
+    if (fs.existsSync(DATA_PATH)) { //file exist return data..
+        const data = JSON.parse(fs.readFileSync(DATA_PATH));
+        return data;
+    } else {
+        return [];
+    };
 });
