@@ -12,5 +12,4 @@ In the future, it will also support attaching **photos** and **videos** to your 
 
 ## 📸 Screenshots
 
-```markdown
 ![v0.1.0](./diary1.PNG)
