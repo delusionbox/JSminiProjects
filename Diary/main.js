@@ -2,8 +2,14 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 
 const path = require('path');
 const fs = require('fs');
+const { dialog } = require('electron/main');
 
 const DATA_PATH = path.join(__dirname, 'data.json');
+const UPLOAD_PATH = path.join(__dirname, 'uploads');
+
+if (!fs.existsSync(UPLOAD_PATH)) {
+    fs.mkdirSync(UPLOAD_PATH);
+};
 
 const createWindow = () => {
     const win = new BrowserWindow({
@@ -33,6 +39,7 @@ ipcMain.on('submitContents', (event, contents) => { //Content write in JSON file
         title: contents.title,
         content: contents.content,
         date: contents.date,
+        imagePaths: contents.imagePaths || []
     }); //else content push in empty array
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2)); //and write json (value, replacer, space)
 });
@@ -45,3 +52,26 @@ ipcMain.handle('show-contents', async () => {
         return [];
     };
 });
+
+ipcMain.handle('select-image', async () => {
+    const result = await dialog.showOpenDialog({
+        properties: ['openFile'],
+        filters: [{
+            name: 'Image',
+            extensions: ['jpg', 'png', 'gif']
+        }]
+    });
+
+    if (result.canceled || result.filePaths.length == 0) {
+        return null;
+    };
+
+    const sourchPath = result.filePaths[0];
+    const fileName = path.basename(sourchPath);
+    const destPath = path.join(UPLOAD_PATH, fileName);
+
+    fs.copyFileSync(sourchPath, destPath);
+
+    return destPath;
+});
+
