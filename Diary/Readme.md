@@ -1,14 +1,18 @@
 # MyDiary
- 
+
+Current Version: **v0.2.0**
+
 You can write and manage diary entries locally on your computer.  
 In the future, it will also support attaching **photos** and **videos** to your entries.
 
 ## Features
 
--  Write diary entries
--  View list of your diary entries
--  Attach photos and videos (planned)
-
+-  ✅ Write diary entries 
+-  ✅ View list of your diary entries
+-  ✅ Attach photos and videos
+-  ❌ Edit and Delete
+-  ❌ tag and category
+-  ❌ search
 
 ## 📸 Screenshots
 

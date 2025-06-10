@@ -1,13 +1,16 @@
 
 let selectImagePaths = [];
+let selectVideoPaths = [];
 
 //Submit and Show content event..
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('submitBtn').addEventListener('click', sendContents);
     document.getElementById('ImageBtn').addEventListener('click', addImage);
+    document.getElementById('VideoBtn').addEventListener('click', addVideo);
     showContents();
 });
 
+//add Image and Video
 async function addImage() {
     const imagePath = await window.electronAPI.selectImage();
     if (imagePath) {
@@ -21,19 +24,35 @@ async function addImage() {
     };
 };
 
+async function addVideo() {
+    const videoPath = await window.electronAPI.selectVideo();
+    if (videoPath) {
+        selectVideoPaths.push(videoPath);
+
+        const videoPre = document.createElement('video');
+        videoPre.src = videoPath;
+        videoPre.style.maxWidth = '100px';
+        videoPre.style.margin = '10px';
+        document.getElementById('videoPreview').appendChild(videoPre);
+    };
+};
+
+
 //Contents Submit function
 function sendContents() {
     const title = document.getElementById('title').value;
     const content = document.getElementById('content').value;
     const date = Date.now();
 
-    const submitData = { title, content, date, imagePaths: selectImagePaths };
+    const submitData = { title, content, date, imagePaths: selectImagePaths, videoPaths: selectVideoPaths, };
 
     window.electronAPI.sendContents(submitData);
     alert("Submit Success!");
 
     selectImagePaths = [];
     document.getElementById('imagePreview').innerHTML = '';
+    selectVideoPaths = [];
+    document.getElementById('videoPreview').innerHTML = '';
     document.getElementById('title').value = '';
     document.getElementById('content').value = '';
 
@@ -65,7 +84,18 @@ async function showContents() {
                 img.style.margin = '10px';
                 contentList.appendChild(img);
             });
-        }
+        };
+
+        if (ctnt.videoPaths && ctnt.videoPaths.length > 0) {
+            ctnt.videoPaths.forEach(vidPath => {
+                const video = document.createElement('video');
+                video.src = `file://${vidPath}`;
+                video.controls = true;
+                video.style.maxWidth = '300px';
+                video.style.margin = '10px';
+                contentList.appendChild(video);
+            });
+        };
 
         list.appendChild(contentList);
     });

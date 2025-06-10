@@ -4,4 +4,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     sendContents: (contents) => ipcRenderer.send("submitContents", contents),
     getContents: () => ipcRenderer.invoke("show-contents"),
     selectImage: () => ipcRenderer.invoke("select-image"),
+    selectVideo: () => ipcRenderer.invoke("select-video"),
 });

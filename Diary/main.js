@@ -39,7 +39,8 @@ ipcMain.on('submitContents', (event, contents) => { //Content write in JSON file
         title: contents.title,
         content: contents.content,
         date: contents.date,
-        imagePaths: contents.imagePaths || []
+        imagePaths: contents.imagePaths || [],
+        videoPaths: contents.videoPaths || [],
     }); //else content push in empty array
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2)); //and write json (value, replacer, space)
 });
@@ -66,12 +67,33 @@ ipcMain.handle('select-image', async () => {
         return null;
     };
 
-    const sourchPath = result.filePaths[0];
-    const fileName = path.basename(sourchPath);
+    const sourcePath = result.filePaths[0];
+    const fileName = path.basename(sourcePath);
     const destPath = path.join(UPLOAD_PATH, fileName);
 
-    fs.copyFileSync(sourchPath, destPath);
+    fs.copyFileSync(sourcePath, destPath);
 
     return destPath;
 });
 
+ipcMain.handle('select-video', async () => {
+    const result = await dialog.showOpenDialog({
+        properties: ['openFile'],
+        filters: [{
+            name: 'Video',
+            extensions: ['avi', 'mp4', 'mov']
+        }]
+    });
+
+    if (result.canceled || result.filePaths.length == 0) {
+        return null;
+    };
+
+    const sourcePath = result.filePaths[0];
+    const fileName = path.basename(sourcePath);
+    const destPath = path.join(UPLOAD_PATH, fileName);
+
+    fs.copyFileSync(sourcePath, destPath);
+
+    return destPath;
+});
