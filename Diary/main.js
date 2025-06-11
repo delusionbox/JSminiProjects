@@ -97,3 +97,13 @@ ipcMain.handle('select-video', async () => {
 
     return destPath;
 });
+
+ipcMain.handle('edit-contents', (event, index, newData) => {
+    if (fs.existsSync(DATA_PATH)) {
+        const data = JSON.parse(fs.readFileSync(DATA_PATH));
+        if (index >= 0 && index < data.length) {
+            data[index] = newData;
+            fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
+        };
+    };
+});
