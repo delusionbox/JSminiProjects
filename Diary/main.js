@@ -98,12 +98,56 @@ ipcMain.handle('select-video', async () => {
     return destPath;
 });
 
-ipcMain.handle('edit-contents', (event, index, newData) => {
-    if (fs.existsSync(DATA_PATH)) {
-        const data = JSON.parse(fs.readFileSync(DATA_PATH));
-        if (index >= 0 && index < data.length) {
-            data[index] = newData;
-            fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
-        };
+ipcMain.handle('edit-contents', (event, targetDate, newData) => {
+    if (!fs.existsSync(DATA_PATH)) return;
+
+    const data = JSON.parse(fs.readFileSync(DATA_PATH));
+
+    const idx = data.findIndex(entry => entry.date === targetDate);
+    if (idx === -1) return;
+
+    const oldData = data[idx];
+
+    const notuseFile = [
+        ...(oldData.imagePaths || []).filter(p => !newData.imagePaths.includes(p)),
+        ...(oldData.videoPaths || []).filter(p => !newData.videoPaths.includes(p)),
+    ];
+
+    notuseFile.forEach(filePath => {
+        if (fs.existsSync(filePath)) {
+            try {
+                fs.unlinkSync(filePath);
+            } catch (err) {
+                console.error(`FAIL ${filePath}`, err);
+            };
+        }
+    });
+
+    data[idx] = newData;
+    fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
+});
+
+ipcMain.handle('delete-content', async (event, targetDate) => {
+    if (!fs.existsSync(DATA_PATH)) return;
+
+    const data = JSON.parse(fs.readFileSync(DATA_PATH));
+    const target = data.find(entry => entry.date === targetDate);
+
+    if (!target) return;
+
+    const deleteFile = (filePath) => {
+        if (fs.existsSync(filePath)) {
+            try {
+                fs.unlinkSync(filePath);
+            } catch (err) {
+                console.error(`FAILED: ${filePath}`, err);
+            }
+        }
     };
+
+    (target.imagePaths || []).forEach(deleteFile);
+    (target.videoPaths || []).forEach(deleteFile);
+
+    const updateJson = data.filter(entry => entry.date !== targetDate);
+    fs.writeFileSync(DATA_PATH, JSON.stringify(updateJson, null, 2));
 });

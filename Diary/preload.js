@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     selectImage: () => ipcRenderer.invoke("select-image"),
     selectVideo: () => ipcRenderer.invoke("select-video"),
     editContents: (index, newData) => ipcRenderer.invoke('edit-contents', index, newData),
+    deleteContent: (date) => ipcRenderer.invoke('delete-content', date),
 });

@@ -1,8 +1,7 @@
-
 let selectImagePaths = [];
 let selectVideoPaths = [];
 
-let editingIndex = null;
+let editingDate = null;
 
 //Submit and Show content event..
 document.addEventListener('DOMContentLoaded', () => {
@@ -13,8 +12,31 @@ document.addEventListener('DOMContentLoaded', () => {
     showContents();
 });
 
+function formatDate(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleString();
+};
+
+function CreateImagePreview(path) {
+    const img = document.createElement('img');
+    img.src = `file://${path}`;
+    img.style.maxWidth = '100px';
+    img.style.margin = '10px';
+    return img;
+};
+
+function CreateVideoPreview(path) {
+    const video = document.createElement('video');
+    video.src = `file://${path}`;
+    video.controls = true;
+    video.style.maxWidth = '100px';
+    video.style.margin = '10px';
+    return video;
+
+};
+
 function cancelEdit() {
-    editingIndex = null;
+    editingDate = null;
     document.getElementById('title').value = '';
     document.getElementById('content').value = '';
     document.getElementById('submitBtn').innerText = 'Save';
@@ -28,59 +50,37 @@ function cancelEdit() {
 //add Image and Video
 async function addImage() {
     const imagePath = await window.electronAPI.selectImage();
-    if (imagePath) {
+    if (imagePath && !selectImagePaths.includes(imagePath)) {
         selectImagePaths.push(imagePath);
-
-        const imagePre = document.createElement('img');
-        imagePre.src = imagePath;
-        imagePre.style.maxWidth = '100px';
-        imagePre.style.margin = '10px';
-        document.getElementById('imagePreview').appendChild(imagePre);
+        document.getElementById('imagePreview').appendChild(CreateImagePreview(imagePath));
     };
 };
 
 async function addVideo() {
     const videoPath = await window.electronAPI.selectVideo();
-    if (videoPath) {
+    if (videoPath && !selectVideoPaths.includes(videoPath)) {
         selectVideoPaths.push(videoPath);
-
-        const videoPre = document.createElement('video');
-        videoPre.src = videoPath;
-        videoPre.style.maxWidth = '100px';
-        videoPre.style.margin = '10px';
-        document.getElementById('videoPreview').appendChild(videoPre);
+        document.getElementById('videoPreview').appendChild(CreateVideoPreview(videoPath));
     };
 };
 
 
 //Contents Submit function
-function sendContents() {
+async function sendContents() {
     const title = document.getElementById('title').value;
     const content = document.getElementById('content').value;
-    const date = Date.now();
+    const date = editingDate ?? Date.now();
 
     const submitData = { title, content, date, imagePaths: selectImagePaths, videoPaths: selectVideoPaths, };
 
-    if (editingIndex !== null) {
-        window.electronAPI.editContents(editingIndex, submitData);
-        alert("Edit Success!");
-        document.getElementById('submitBtn').innerText = 'Save';
-        editingIndex = null;
+    if (editingDate !== null) {
+        await window.electronAPI.editContents(editingDate, submitData);
     } else {
-        window.electronAPI.sendContents(submitData);
+        await window.electronAPI.sendContents(submitData);
         alert("Submit Success!");
     };
 
-    editingIndex = null;
-    selectImagePaths = [];
-    document.getElementById('imagePreview').innerHTML = '';
-    selectVideoPaths = [];
-    document.getElementById('videoPreview').innerHTML = '';
-    document.getElementById('title').value = '';
-    document.getElementById('content').value = '';
-    document.getElementById('submitBtn').innerText = 'Save';
-    document.getElementById('cancelEditBtn').style.display = 'none';
-
+    cancelEdit();
     showContents();
     //window.location.reload();
 };
@@ -93,7 +93,7 @@ async function showContents() {
     const list = document.getElementById('contentList');
     list.innerHTML = '';
 
-    showList.forEach((ctnt, index) => {
+    showList.forEach((ctnt) => {
         const contentList = document.createElement('div');
         contentList.className = "show-list";
         contentList.innerHTML = `
@@ -103,34 +103,21 @@ async function showContents() {
         `;
 
         //image and video
-        if (ctnt.imagePaths && ctnt.imagePaths.length > 0) {
-            ctnt.imagePaths.forEach(imgPath => {
-                const img = document.createElement('img');
-                img.src = `file://${imgPath}`;
-                img.style.maxWidth = '100px';
-                img.style.margin = '10px';
-                contentList.appendChild(img);
-            });
-        };
+        (ctnt.imagePaths || []).forEach(path => {
+            contentList.appendChild(CreateImagePreview(path));
+        });
 
-        if (ctnt.videoPaths && ctnt.videoPaths.length > 0) {
-            ctnt.videoPaths.forEach(vidPath => {
-                const video = document.createElement('video');
-                video.src = `file://${vidPath}`;
-                video.controls = true;
-                video.style.maxWidth = '300px';
-                video.style.margin = '10px';
-                contentList.appendChild(video);
-            });
-        };
+        (ctnt.videoPaths || []).forEach(path => {
+            contentList.appendChild(CreateVideoPreview(path));
+        });
 
         //editing 
         contentList.querySelector('.editBtn').addEventListener('click', () => {
-            editingIndex = index;
+            editingDate = ctnt.date;
             document.getElementById('title').value = ctnt.title;
             document.getElementById('content').value = ctnt.content;
-            selectImagePaths = ctnt.imagePaths || [];
-            selectVideoPaths = ctnt.videoPaths || [];
+            selectImagePaths = [...ctnt.imagePaths || []];
+            selectVideoPaths = [...ctnt.videoPaths || []];
 
             document.getElementById('submitBtn').innerText = "Edit";
             document.getElementById('cancelEditBtn').style.display = 'inline-block';
@@ -138,21 +125,27 @@ async function showContents() {
             //preview update
             document.getElementById('imagePreview').innerHTML = '';
             selectImagePaths.forEach(path => {
-                const img = document.createElement('img');
-                img.src = `file://${path}`;
-                img.style.maxWidth = '100px';
-                img.style.margin = '10px';
-                document.getElementById('imagePreview').appendChild(img);
+                document.getElementById('imagePreview').appendChild(CreateImagePreview(path));
             });
             document.getElementById('videoPreview').innerHTML = '';
-            selectImagePaths.forEach(path => {
-                const video = document.createElement('video');
-                video.src = `file://${path}`;
-                video.style.maxWidth = '100px';
-                video.style.margin = '10px';
-                document.getElementById('imagePreview').appendChild(video);
+            selectVideoPaths.forEach(path => {
+                document.getElementById('videoPreview').appendChild(CreateVideoPreview(path));
             });
         });
+
+        //delete
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerText = 'Delete';
+        deleteBtn.style.marginLeft = '10px';
+        deleteBtn.onclick = async () => {
+            const confirmed = confirm("Are you Sure?");
+            if (confirmed) {
+                await window.electronAPI.deleteContent(ctnt.date);
+                alert("Del Complete");
+                showContents();
+            }
+        };
+        contentList.appendChild(deleteBtn);
 
         list.appendChild(contentList);
     });
