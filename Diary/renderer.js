@@ -17,22 +17,71 @@ function formatDate(timestamp) {
     return date.toLocaleString();
 };
 
-function CreateImagePreview(path) {
+function CreateImagePreview(path, editable = false) {
+    const container = document.createElement('div');
+    container.style.display = 'inline-block';
+    container.style.position = 'relative';
+
     const img = document.createElement('img');
     img.src = `file://${path}`;
     img.style.maxWidth = '100px';
     img.style.margin = '10px';
-    return img;
+
+    container.appendChild(img);
+
+    if (editable) {
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = '❌';
+        removeBtn.style.position = 'absolute';
+        removeBtn.style.top = '0';
+        removeBtn.style.right = '0';
+        removeBtn.style.backgroundColor = 'red';
+        removeBtn.style.color = 'white';
+        removeBtn.style.border = 'none';
+        removeBtn.style.cursor = 'pointer';
+
+        removeBtn.onclick = () => {
+            container.remove();
+            selectImagePaths = selectImagePaths.filter(p => p !== path);
+        };
+
+        container.appendChild(removeBtn);
+    }
+    return container;
 };
 
-function CreateVideoPreview(path) {
+function CreateVideoPreview(path, editable = false) {
+    const container = document.createElement('div');
+    container.style.display = 'inline-block';
+    container.style.position = 'relative';
+
     const video = document.createElement('video');
     video.src = `file://${path}`;
     video.controls = true;
     video.style.maxWidth = '100px';
     video.style.margin = '10px';
-    return video;
+    container.appendChild(video);
 
+    if (editable) {
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = '❌';
+        removeBtn.style.position = 'absolute';
+        removeBtn.style.top = '0';
+        removeBtn.style.right = '0';
+        removeBtn.style.backgroundColor = 'red';
+        removeBtn.style.color = 'white';
+        removeBtn.style.border = 'none';
+        removeBtn.style.cursor = 'pointer';
+
+        removeBtn.onclick = () => {
+            container.remove();
+            selectVideoPaths = selectVideoPaths.filter(p => p !== path);
+        };
+
+
+        container.appendChild(removeBtn);
+    }
+    return container;
 };
 
 function cancelEdit() {
@@ -104,11 +153,11 @@ async function showContents() {
 
         //image and video
         (ctnt.imagePaths || []).forEach(path => {
-            contentList.appendChild(CreateImagePreview(path));
+            contentList.appendChild(CreateImagePreview(path, false));
         });
 
         (ctnt.videoPaths || []).forEach(path => {
-            contentList.appendChild(CreateVideoPreview(path));
+            contentList.appendChild(CreateVideoPreview(path, false));
         });
 
         //editing 
@@ -125,11 +174,11 @@ async function showContents() {
             //preview update
             document.getElementById('imagePreview').innerHTML = '';
             selectImagePaths.forEach(path => {
-                document.getElementById('imagePreview').appendChild(CreateImagePreview(path));
+                document.getElementById('imagePreview').appendChild(CreateImagePreview(path, true));
             });
             document.getElementById('videoPreview').innerHTML = '';
             selectVideoPaths.forEach(path => {
-                document.getElementById('videoPreview').appendChild(CreateVideoPreview(path));
+                document.getElementById('videoPreview').appendChild(CreateVideoPreview(path, true));
             });
         });
 
