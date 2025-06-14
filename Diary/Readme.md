@@ -12,8 +12,9 @@ In the future, it will also support attaching **photos** and **videos** to your 
 -  ✅ Attach photos and videos
 -  🟡 Edit and Delete
 -  ❌ tag and category
--  ❌ search
+-  🟡 search
 
 ## 📸 Screenshots
 
 ![v0.1.0](./diary1.PNG)
+![v0.3.0](./diary2.PNG)
