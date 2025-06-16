@@ -9,6 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
     document.getElementById('ImageBtn').addEventListener('click', addImage);
     document.getElementById('VideoBtn').addEventListener('click', addVideo);
+    document.getElementById('searchBtn').addEventListener('click', searchContents);
+    document.getElementById('clearsearchBtn').addEventListener('click', () => {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('clearsearchBtn').style.display = 'none';
+        showContents();
+    });
     showContents();
 });
 
@@ -200,6 +206,87 @@ async function showContents() {
     });
 };
 
+async function searchContents() {
+    const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+    if (keyword === '') {
+        alert("Input Search");
+        return;
+    };
+
+    const allContents = await window.electronAPI.getContents();
+    const filtered = allContents.filter(c =>
+        (c.title && c.title.toLowerCase().includes(keyword)) || (c.content && c.content.toLowerCase().includes(keyword))
+    );
+
+    if (filtered.length === 0) {
+        alert("Not exist");
+    };
+
+    renderFilteredContents(filtered);
+    document.getElementById('clearsearchBtn').style.display = 'inline-block';
+};
+
+function renderFilteredContents(showList) {
+    const list = document.getElementById('contentList');
+    list.innerHTML = '';
+
+    showList.forEach((ctnt) => {
+        const contentList = document.createElement('div');
+        contentList.className = "show-list";
+        contentList.innerHTML = `
+            <h1>${ctnt.date} = ${ctnt.title}</h1> 
+            <p>${ctnt.content}</p>
+            <button class="editBtn">Edit</button>
+        `;
+
+        //image and video
+        (ctnt.imagePaths || []).forEach(path => {
+            contentList.appendChild(CreateImagePreview(path, false));
+        });
+
+        (ctnt.videoPaths || []).forEach(path => {
+            contentList.appendChild(CreateVideoPreview(path, false));
+        });
+
+        //editing 
+        contentList.querySelector('.editBtn').addEventListener('click', () => {
+            editingDate = ctnt.date;
+            document.getElementById('title').value = ctnt.title;
+            document.getElementById('content').value = ctnt.content;
+            selectImagePaths = [...ctnt.imagePaths || []];
+            selectVideoPaths = [...ctnt.videoPaths || []];
+
+            document.getElementById('submitBtn').innerText = "Edit";
+            document.getElementById('cancelEditBtn').style.display = 'inline-block';
+
+            //preview update
+            document.getElementById('imagePreview').innerHTML = '';
+            selectImagePaths.forEach(path => {
+                document.getElementById('imagePreview').appendChild(CreateImagePreview(path, true));
+            });
+            document.getElementById('videoPreview').innerHTML = '';
+            selectVideoPaths.forEach(path => {
+                document.getElementById('videoPreview').appendChild(CreateVideoPreview(path, true));
+            });
+        });
+
+        //delete
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerText = 'Delete';
+        deleteBtn.style.marginLeft = '10px';
+        deleteBtn.onclick = async () => {
+            const confirmed = confirm("Are you Sure?");
+            if (confirmed) {
+                await window.electronAPI.deleteContent(ctnt.date);
+                alert("Del Complete");
+                showContents();
+            }
+        };
+        contentList.appendChild(deleteBtn);
+
+        list.appendChild(contentList);
+    });
+};
 
 /* Don't Use.. DOMContentLoaded is better
 window.onload = () => {
