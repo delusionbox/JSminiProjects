@@ -10,9 +10,11 @@ In the future, it will also support attaching **photos** and **videos** to your 
 -  ✅ Write diary entries 
 -  ✅ View list of your diary entries
 -  ✅ Attach photos and videos
--  🟡 Edit and Delete
+-  ✅ Edit and Delete
+-  ✅ search
 -  ❌ tag and category
--  🟡 search
+-  ❌ Dark mode
+
 
 ## 📸 Screenshots
 
